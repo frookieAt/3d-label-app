@@ -17,12 +17,17 @@ with col2:
 model_height_mm = st.number_input("Real Height of the Model (mm)", value=120)
 
 if st.button("Apply Label") and model_file and label_file:
-    model_path = os.path.join("models", model_file.name)
-    label_path = os.path.join("labels", label_file.name)
-    with open(model_path, "wb") as f:
-        f.write(model_file.read())
-    with open(label_path, "wb") as f:
-        f.write(label_file.read())
+    os.makedirs("models", exist_ok=True)
+os.makedirs("labels", exist_ok=True)
+
+model_path = os.path.join("models", model_file.name)
+label_path = os.path.join("labels", label_file.name)
+
+with open(model_path, "wb") as f:
+    f.write(model_file.read())
+with open(label_path, "wb") as f:
+    f.write(label_file.read())
+
 
     st.write("🧠 Sending request to GPT-4...")
     script_path = "scripts/apply_label.py"
