@@ -17,28 +17,33 @@ with col2:
 model_height_mm = st.number_input("Real Height of the Model (mm)", value=120)
 
 if st.button("Apply Label") and model_file and label_file:
+    # ✅ Create folders safely (for Streamlit Cloud compatibility)
     os.makedirs("models", exist_ok=True)
-os.makedirs("labels", exist_ok=True)
+    os.makedirs("labels", exist_ok=True)
+    os.makedirs("scripts", exist_ok=True)
+    os.makedirs("output", exist_ok=True)
 
-model_path = os.path.join("models", model_file.name)
-label_path = os.path.join("labels", label_file.name)
+    # ✅ Save uploaded files
+    model_path = os.path.join("models", model_file.name)
+    label_path = os.path.join("labels", label_file.name)
 
-with open(model_path, "wb") as f:
-    f.write(model_file.read())
-with open(label_path, "wb") as f:
-    f.write(label_file.read())
+    with open(model_path, "wb") as f:
+        f.write(model_file.read())
 
+    with open(label_path, "wb") as f:
+        f.write(label_file.read())
 
     st.write("🧠 Sending request to GPT-4...")
     script_path = "scripts/apply_label.py"
     generate_blender_script(model_path, label_path, label_width, label_height, model_height_mm, script_path)
 
-    st.write("🎬 Running Blender to apply label...")
-    subprocess.run([
-        "blender", "--background", "--python", script_path
-    ])
+    # 🛑 WARNING: Blender won't run in Streamlit Cloud. This works only locally.
+    st.warning("Blender can't run in Streamlit Cloud. You'll need to run this script locally.")
 
-    st.success("✅ Done! See your results below:")
-    st.image("output/render.png")
-    with open("output/labeled_model.glb", "rb") as f:
-        st.download_button("Download .glb", f, file_name="labeled_model.glb")
+    # ✅ Optionally show GPT-generated script
+    with open(script_path, "r") as f:
+        st.code(f.read(), language="python")
+
+    # ✅ (Optional) Let user download the script
+    with open(script_path, "rb") as f:
+        st.download_button("Download Blender Script", f, file_name="apply_label.py")
