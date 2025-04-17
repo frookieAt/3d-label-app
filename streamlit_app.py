@@ -5,7 +5,7 @@ from gpt_label import generate_blender_script
 st.title("💡 3D Label Applicator")
 
 model_file = st.file_uploader("Upload 3D Model (.obj or .glb)", type=["obj", "glb"])
-label_file = st.file_uploader("Upload Label Image (.png)", type=["png", "jpg"])
+label_file = st.file_uploader("Upload Label Image (.png or .jpg)", type=["png", "jpg"])
 
 col1, col2 = st.columns(2)
 with col1:
@@ -15,36 +15,44 @@ with col2:
 
 model_height_mm = st.number_input("Real Height of the Model (mm)", value=120)
 
-# ✅ Only run if button is clicked
+# 🟢 MAIN ACTION
 if st.button("Apply Label"):
 
-    # ✅ Check if files are uploaded
-    if model_file is None or label_file is None:
+    # ✅ Check for both uploads
+    if not model_file or not label_file:
         st.error("Please upload both a 3D model and a label image.")
     else:
         try:
-            # ✅ Make necessary folders
+            # ✅ Create necessary folders
             os.makedirs("models", exist_ok=True)
             os.makedirs("labels", exist_ok=True)
             os.makedirs("scripts", exist_ok=True)
             os.makedirs("output", exist_ok=True)
 
-            # ✅ Save uploaded files
+            # ✅ Save files
             model_path = os.path.join("models", model_file.name)
             label_path = os.path.join("labels", label_file.name)
 
             with open(model_path, "wb") as f:
                 f.write(model_file.read())
+
             with open(label_path, "wb") as f:
                 f.write(label_file.read())
 
-            # ✅ Generate Blender script with GPT-4
+            # ✅ Generate Blender script
             st.write("🧠 Sending request to GPT-4...")
             script_path = "scripts/apply_label.py"
-            generate_blender_script(model_path, label_path, label_width, label_height, model_height_mm, script_path)
+            generate_blender_script(
+                model_path=model_path,
+                label_path=label_path,
+                label_width_mm=label_width,
+                label_height_mm=label_height,
+                model_height_mm=model_height_mm,
+                output_script_path=script_path
+            )
 
-            # ✅ Display & offer download of generated script
-            st.warning("Blender can't run in Streamlit Cloud. Run this script locally in Blender to render.")
+            # ✅ Show and download Blender script
+            st.warning("⚠️ Blender cannot run on Streamlit Cloud. Please run the script locally.")
             with open(script_path, "r") as f:
                 st.code(f.read(), language="python")
             with open(script_path, "rb") as f:
